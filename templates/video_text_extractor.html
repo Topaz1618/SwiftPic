@@ -51,6 +51,17 @@
             align-items: center; /* 垂直居中内容 */
             justify-content: center; /* 水平居中内容 */
             background-color: black; /* 设置背景颜色为黑色 */
+            position: relative;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5); /* 透明黑色背景，可根据需要调整 */
+            z-index: 2; /* 确保覆盖层在视频之上 */
         }
 
         .video-row {
@@ -127,15 +138,17 @@
 
 
 <body>
-    <div id="app" v-cloak>
-        <button class="page-button" @click="toggleModal">显示图片</button>
-        <input type="text" v-model="picked_video" style="width: 30%;">
+    <div id="app" v-cloak style="text-align: center">
+        <h2> Video Text Extractor  </h2>
+        <input type="text" v-model="picked_video" style="width: 60%; height: 30px;">
+        <button class="page-button" @click="toggleModal">选择视频</button>
+
         <div v-if="showModal" class="modal" >
             <div class="modal-content">
                 <span class="close" @click="toggleModal">&times;</span>
 
                 <div class="video-row">
-                    <div class="video-container" v-for="video in uploadedVideos" :key="video"  @click="selectVideo(video)" @contextmenu.prevent="playVideo($event, video)">
+                    <div class="video-container" v-for="video in uploadedVideos" :key="video"  @mousedown.left.prevent="selectVideo(video)" @contextmenu.prevent="playVideo($event, video)">
                         <div class="video-overlay"></div>
                         <video controls>
                             <source :src="'/videos/' + video" type="video/mp4">
