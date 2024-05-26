@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Text Extractor</title>
+    <link rel="stylesheet" href="">
+    <style>
+        [v-cloak] { display: none; }
+
+        .modal {
+            display: block; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .video-container {
+            /*width: 320px; !* 设置固定宽度 *!*/
+            height: 240px; /* 设置固定高度 */
+            margin: 10px; /* 在每个容器四周添加间隔 */
+            overflow: hidden; /* 防止视频溢出 */
+            display: flex; /* 启用Flexbox */
+            align-items: center; /* 垂直居中内容 */
+            justify-content: center; /* 水平居中内容 */
+            background-color: black; /* 设置背景颜色为黑色 */
+        }
+
+        .video-row {
+            display: flex; /* 使用Flexbox来布置行 */
+            /*justify-content: space-around; !* 使每个容器在行中平均分布 *!*/
+            flex-wrap: wrap; /* 当不足以放下更多容器时，允许容器换行 */
+            max-width: 1020px; /* 最大宽度是3个视频容器的宽度总和加上间距 */
+        }
+
+        video {
+            width: 100%; /* 让视频宽度自适应容器 */
+            height: auto; /* 自动调整视频高度保持宽高比 */
+            max-height: 100%; /* 确保视频最大高度不超过容器高度 */
+        }
+
+
+
+        /*@keyframes scroll {*/
+        /*    from {*/
+        /*        transform: translateX(100%);*/
+        /*    }*/
+        /*    to {*/
+        /*        transform: translateX(-100%);*/
+        /*    }*/
+        /*}*/
+
+        /*.video-title span {*/
+        /*    display: inline-block;*/
+        /*    padding-right: 100%; !* 右侧填充，确保循环滚动 *!*/
+        /*    animation: scroll 10s linear infinite; !* 应用滚动动画 *!*/
+        /*}*/
+
+        .span-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 200px;         /* 调整宽度以增大显示尺寸 */
+            height: 150px;        /* 调整高度以增大显示尺寸 */
+            border: solid 1px black;
+            border-radius: 10px;
+            margin: 10px;         /* 增加外边距 */
+            overflow: hidden;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+
+        .span-container img {
+            max-width: 100%;      /* 限制最大宽度，保持图片比例 */
+            max-height: 100%;     /* 限制最大高度，保持图片比例 */
+            height: auto;         /* 自动调整高度以保持比例 */
+            width: auto;          /* 自动调整宽度以保持比例 */
+        }
+
+        .page-button {
+            background-color: #946bde;
+            border: 1px solid #946bde;
+            color: #fff;
+            text-align: center;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .page-button:hover {
+            background-color: #cdbde8; /* 鼠标悬停的背景颜色 */
+            border-color: #cdbde8; /* 鼠标悬停的边框颜色 */
+            color: #000; /* 鼠标悬停的字体颜色 */
+        }
+
+    </style>
+</head>
+
+
+<body>
+    <div id="app" v-cloak>
+        <button class="page-button" @click="toggleModal">显示图片</button>
+        <input type="text" v-model="picked_video" style="width: 30%;">
+        <div v-if="showModal" class="modal" >
+            <div class="modal-content">
+                <span class="close" @click="toggleModal">&times;</span>
+
+                <div class="video-row">
+                    <div class="video-container" v-for="video in uploadedVideos" :key="video"  @click="selectVideo(video)" @contextmenu.prevent="playVideo($event, video)">
+                        <div class="video-overlay"></div>
+                        <video controls>
+                            <source :src="'/videos/' + video" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <div style="text-align: center">
+                    <div style="margin-bottom:1%; font-size: 12px ">[[ pagination ]]</div>
+                    <button class="page-button" @click="firstPage">首页</button>
+                    <button class="page-button" @click="prevPage">上一页</button>
+                    <button class="page-button" @click="nextPage">下一页</button>
+                    <button class="page-button" @click="lastPage">尾页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+<script src="/static/js/vue.js"></script>
+<script>
+    new Vue({
+    el: '#app',
+    delimiters: ['[[', ']]'],
+    data: {
+        showModal: false,
+        uploadedVideos: [], // 假设你已经有方法填充这个数组
+        pagination: '',
+        currentPage: 1,
+        totalPages: 1, // 假设有10页数据
+        page_limitation: 12,
+        picked_video: [],
+    },
+    methods: {
+        selectVideo(video) {
+            // this.picked_video = '/videos/' + video;
+            const index = this.picked_video.indexOf(video);
+            if (index === -1) {
+                this.picked_video.push(video); // 添加视频到数组
+            } else {
+                this.picked_video.splice(index, 1); // 如果已选择，则取消选择
+            }
+            this.toggleModal();  // 选择图片后关闭模态框
+
+        },
+
+        playVideo(event, video) {
+            event.preventDefault(); // 防止默认右键菜单
+            const player = event.target.closest('.video-container').querySelector('video');
+            if (player.paused) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        },
+
+        toggleModal() {
+            this.showModal = !this.showModal;
+        },
+        fetchUploadedImages() {
+            console.log(this.currentPage, this.totalPages);
+            fetch('/api/video_text_extractor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    current_page: this.currentPage,
+                    page_limitation: this.page_limitation,  // 假设每页10条，根据需要调整
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // console.log(data);
+                this.uploadedVideos = data.uploaded_images;
+
+                this.currentPage = data.currentPage;
+                this.totalPages = data.totalPages;
+
+                this.pagination = `Page: ${this.currentPage} / ${this.totalPages}`;
+            })
+            .catch(error => console.error('Error:', error));
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage -= 1;
+                this.fetchUploadedImages();
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage += 1;
+                this.fetchUploadedImages();
+            }
+        },
+        firstPage(){
+            this.currentPage = 1;
+            this.fetchUploadedImages();
+        },
+        lastPage(){
+            if (this.currentPage < this.totalPages) {
+                this.currentPage = this.totalPages;
+                this.fetchUploadedImages();
+            }
+        },
+    },
+    mounted() {
+        // 可以在这里调用 fetchUploadedImages 来初始化数据
+        this.fetchUploadedImages();
+    }
+});
+</script>
