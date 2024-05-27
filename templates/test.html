@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Text Extractor</title>
+    <link rel="stylesheet" href="">
+    <style>
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak style="text-align: center">
+        <h2> Test  </h2>
+
+        <button @click="ClickBtn()">ok</button>
+    </div>
+
+
+</body>
+</html>
+<script src="/static/js/vue.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: {
+            pageId: null,
+            socket: null,
+            flag: false,
+            picked_video: ["b.mp4", "a.mp4", "c.mp4", "f.mp4"],
+
+        },
+        created() {
+            const uri = window.location.href;
+            this.pageId = uri.substring(uri.lastIndexOf('/') + 1);
+            this.socket = new WebSocket(`ws://localhost:8000/ws/${this.pageId}`);
+            this.socket.onopen = () => {
+                console.log('Connected to WebSocket server');
+
+            };
+            this.socket.onclose = () => {
+                console.log('Disconnected from WebSocket server');
+            };
+            this.socket.onmessage = (event) => {
+                console.log('Received message from server:', event.data);
+                const data = JSON.parse(event.data);
+
+                this.flag = this.picked_video.every(video => data[video] && data[video].status === "completed");
+                if (this.flag) {
+                    console.log("close websocket")
+                    this.socket.close();
+                }
+
+                for (const [video, info] of Object.entries(data)) {
+                    const { status, result, progress } = info;
+                    console.log(`Video: ${video}, Status: ${status}, Result: ${result}, Progress: ${progress}`);
+                    // var text_ele = document.getElementById(video);
+                    // if (text_ele && status === "completed") {
+                    //     text_ele.value = result;
+                    // } else if (text_ele && status === "processing") {
+                    //     text_ele.value = progress;
+                    // }
+                }
+            };
+        },
+
+        methods: {
+            ClickBtn(){
+                console.log("ClickBtn");
+                this.startSendingMessages();
+            },
+            sendMessage() {
+                if (this.socket.readyState === WebSocket.OPEN) {
+                    this.message = JSON.stringify({"action": "start_processing", "videos": this.picked_video});
+                    this.socket.send(this.message);
+                    console.log('Sent message:', this.message);
+                } else {
+                    console.log('WebSocket is not open');
+                }
+            },
+
+            startSendingMessages() {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                }
+                this.intervalId = setInterval(() => {
+                    // 在发送消息之前检查 flag
+                    if (!this.flag) {
+                        this.sendMessage();
+                    } else {
+                        // 如果 flag 为 true，清除定时器
+                        clearInterval(this.intervalId);
+                        console.log('Messages sending stopped because flag is true.');
+                    }
+                }, 1000);
+            },
+        },
+
+        beforeDestroy() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+            }
+            if (this.socket) {
+                this.socket.close();
+            }
+        },
+
+        mounted() {
+
+        }
+    });
+</script>
