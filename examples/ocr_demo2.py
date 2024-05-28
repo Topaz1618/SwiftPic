@@ -2,7 +2,7 @@ import easyocr
 from PIL import Image
 
 # 加载图像
-image_path = 'test.png'
+image_path = 'a5.png'
 image = Image.open(image_path)
 
 # 初始化OCR阅读器，指定语言

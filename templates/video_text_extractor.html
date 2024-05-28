@@ -271,7 +271,11 @@
         intervalId: null
     },
     created() {
+        this.connectWebSocket();
+    },
 
+    methods: {
+        connectWebSocket(){
             this.socket = new WebSocket(`ws://localhost:8000/ws/video_progress`);
             this.socket.onopen = () => {
                 console.log('Connected to WebSocket server');
@@ -302,10 +306,9 @@
                 }
             };
 
-    },
+        },
 
 
-    methods: {
         sendMessage() {
             if (this.socket.readyState === WebSocket.OPEN) {
                 this.message = JSON.stringify({"action": "start_processing", "videos": this.picked_video});
@@ -313,6 +316,7 @@
                 console.log('Sent message:', this.message);
             } else {
                 console.log('WebSocket is not open');
+                this.connectWebSocket()
             }
         },
 

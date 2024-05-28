@@ -18,6 +18,15 @@
             border-radius: 4px;
             padding: 5px;
         }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+        }
+        .default-image {
+            opacity: 0.1;
+        }
         .container {
             text-align: center;
         }
@@ -76,14 +85,18 @@
         <div style="width: 42%;">
             <span style="display: inline-block; width: 50%">Original Image:</span>
             <div style="border: solid 1px black; border-radius: 10px; min-height: 200px;">
-                <img v-if="originalImageUrl" :src="originalImageUrl" alt="Original Image">
+<!--                <img v-if="originalImageUrl" :src="originalImageUrl" alt="Original Image">-->
+                <img :src="originalImageUrl ? originalImageUrl : '/static/img/background_default3.png'"
+                     alt="Original Image" :class="{'default-image': !originalImageUrl}">
             </div>
         </div>
 
         <div style="width: 42%; margin-left: 2% ">
             <span style="display: inline-block; width: 50%">Processed Image:</span>
-            <div style="border: solid 1px black; border-radius: 10px; min-height: 200px;">
-                <img v-if="processedImageUrl" :src="processedImageUrl" alt="Processed Image">
+            <div style="border: solid 1px black; border-radius: 10px; m\in-height: 200px;">
+<!--                <img v-if="processedImageUrl" :src="processedImageUrl" alt="Processed Image">-->
+                <img :src="processedImageUrl ? processedImageUrl : '/static/img/background_default6.png'"
+                     alt="Processed Image" :class="{'default-image': !processedImageUrl}">
             </div>
         </div>
     </div>

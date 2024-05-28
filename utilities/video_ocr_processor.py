@@ -73,7 +73,7 @@ class VideoProcessor:
                     break
 
                 frame_count += 1
-                if frame_count % 150 != 0:
+                if frame_count % 100 != 0:
                     continue
 
                 self._update_file_status(video_name, UpdateField.PROGRESS.value, f"{frame_count}/{total_frames}")
@@ -91,7 +91,7 @@ class VideoProcessor:
             unique_results = self._remove_duplicate_content(ocr_text_list)
 
             format_result = '\n'.join(unique_results)
-            self._save_result(output_filepath, format_result)
+            self._save_result(output_filepath, unique_results)
             self._update_file_status(video_name, UpdateField.RESULT.value, format_result)
             self._update_file_status(video_name, UpdateField.STATUS.value, FileStatus.COMPLETED.value)
 
@@ -102,11 +102,7 @@ class VideoProcessor:
             #     print(f"Error processing video {video_path}: {e}")
 
 
-async def main():
-    processor = VideoProcessor(video_paths)
-    await processor.process_videos()
-
-
 if __name__ == "__main__":
-    video_paths = ["a.mp4"]  # List of video paths
-    asyncio.run(main())
+    video_paths = ["e.mp4"]  # List of video paths
+    processor = VideoProcessor(video_paths)
+    processor.process_videos()
