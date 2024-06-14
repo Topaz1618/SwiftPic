@@ -1,5 +1,6 @@
 import os
 import json
+from io import BytesIO
 import asyncio
 import redis
 from time import time, sleep
@@ -18,6 +19,7 @@ from fastapi.responses import JSONResponse, FileResponse  # 确保包括 FileRes
 from utilities.gray_converter import GrayImageProcessor
 from utilities.overlay_effects import OverlayEffectsProcessor
 from utilities.video_ocr_processor import VideoProcessor
+from utilities.color_conveter import ColorConverter
 from enums import UpdateField, FileStatus
 
 VIDEO_FOLDER = "instance/video"
@@ -35,6 +37,48 @@ r = redis.Redis(host="127.0.0.1", port=6379)
 @app.get("/")
 def main():
     return FileResponse('templates/index.html')
+
+
+@app.get("/foreground_color_converter",)
+def get_convert_foreground_color_page():
+    return FileResponse('templates/foreground_color_converter.html')
+
+
+@app.post("/foreground_color_converter",)
+async def post_handle_foreground_color_conversion(image: UploadFile = File(...), operation: str = Form(...), custom_color: str = Form(...)):
+    contents = await image.read()
+
+    img = Image.open(io.BytesIO(contents))
+
+    if operation == 'b2w':
+        converter = ColorConverter(img)
+        img = converter.convert_black_to_white()
+        img_str = converter.get_base64_image()
+
+    elif operation == 'w2b':
+        converter = ColorConverter(img)
+        converter.convert_white_to_black()
+        img_str = converter.get_base64_image()
+
+    elif operation == 'invert':
+        img = ImageOps.invert(img.convert('RGB'))
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+    elif operation == 'w2c':
+        # custom_color = "#6747c7"
+        converter = ColorConverter(img)
+        img = converter.convert_white_to_color(custom_color)
+        img_str = converter.get_base64_image()
+
+    elif operation == 'b2c':
+        # custom_color = "#6747c7"
+        converter = ColorConverter(img)
+        img = converter.convert_black_to_color(custom_color)
+        img_str = converter.get_base64_image()
+
+    return JSONResponse(content={"data": img_str})
 
 
 @app.get("/test/{page_id}")

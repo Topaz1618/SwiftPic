@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker Example</title>
+</head>
+<body>
+    <h1>Color Picker for Background and Text</h1>
+    <label for="bg-color">Choose background color:</label>
+    <input type="color" id="bg-color" value="#ffffff"> <!-- Default white background -->
+
+    <label for="text-color">Choose text color:</label>
+    <input type="color" id="text-color" value="#000000"> <!-- Default black text -->
+
+    <script>
+        // Get the color input elements
+        const bgColorPicker = document.getElementById('bg-color');
+        const textColorPicker = document.getElementById('text-color');
+
+        // Event listener for background color change
+        bgColorPicker.addEventListener('change', function() {
+            // Apply the selected color as background color of the body
+            document.body.style.backgroundColor = this.value;
+        });
+
+        // Event listener for text color change
+        textColorPicker.addEventListener('change', function() {
+            // Apply the selected color as text color of the body
+            document.body.style.color = this.value;
+        });
+    </script>
+</body>
+</html>
